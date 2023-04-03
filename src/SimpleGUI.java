@@ -9,13 +9,24 @@ import javax.swing.JPanel;
 import javax.swing.JSlider;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.event.ChangeListener;
 import java.awt.Font;
 import java.awt.BorderLayout;
 import java.awt.GridLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 
-public class SimpleGUI extends JFrame {
-    private JTextField jTextField;
-    private JTextArea jTextArea;
+public class SimpleGUI extends JFrame implements ActionListener, ItemListener, ChangeListener {
+
+    private JCheckBox checkBox1;
+    private JCheckBox checkBox2;
+    private JLabel welcomeLabel;
+
+    private JTextField textField;
+
+    private JTextArea textArea;
 
     public SimpleGUI() {
         super("Frame title");
@@ -32,28 +43,24 @@ public class SimpleGUI extends JFrame {
         JMenuBar menuBar = new JMenuBar();
         JMenu menu1 = new JMenu("File");
         JMenuItem menuItem1 = new JMenuItem("Open");
-        textArea.setText("Open");
         JMenuItem menuItem2 = new JMenuItem("Save as");
         menu1.add(menuItem1);
         menu1.add(menuItem2);
         JMenu menu2 = new JMenu("Help");
         JMenuItem menuItem3 = new JMenuItem("FAQ");
-        JMenuItem menuItem4  = new JMenuItem("About");
+        JMenuItem menuItem4 = new JMenuItem("About");
         menu2.add(menuItem3);
         menu2.add(menuItem4);
-
-        JTextArea jTextArea = new JTextArea();
-        JTextField jTextField = new JTextField(10);
 
         // add "File" and "Help" menus to the MenuBar
         menuBar.add(menu1);
         menuBar.add(menu2);
 
         // create the big text area located in the middle
-        JTextArea textArea = new JTextArea();
+         textArea = new JTextArea();
 
         // create welcome label
-        JLabel welcomeLabel = new JLabel("Welcome to my GUI!");
+        welcomeLabel = new JLabel("Welcome to my GUI!");
         welcomeLabel.setFont(new Font("Helvetica", Font.BOLD, 20));
 
         // create slider and adjust settings
@@ -72,32 +79,15 @@ public class SimpleGUI extends JFrame {
 
         // create the components at the bottom
         JLabel label = new JLabel("Enter Text");
-        JTextField textField = new JTextField(10); // accepts up to 10 characters
+        textField = new JTextField(10); // accepts upto 10 characters
         JButton sendButton = new JButton("Send");
-            if(textField.equals("Send")) {
-                welcomeLabel.setText("Send Pressed!");
-                String T = textField.getText();
-                String y = textArea.getText() + T;
-                textArea.setText(y);
-            }
-
-
-
         JButton resetButton = new JButton("Reset");
-        if(textField.equals("Reset")) {
-            welcomeLabel.setText("No box DESELECTED!");
-           // String T = textField.getText();
-           // String y = textArea.getText() + T;
-            textArea.setText(" ");
-        }
-        JButton openButton = new JButton("Reset");
-
-
+        JButton newWindow = new JButton("Open");
 
         // create checkboxes
-        JCheckBox checkBox1 = new JCheckBox("Yes");
+        checkBox1 = new JCheckBox("Yes");
         checkBox1.setBounds(100, 100, 50, 50);
-        JCheckBox checkBox2 = new JCheckBox("No", true);
+        checkBox2 = new JCheckBox("No", true);
         checkBox2.setBounds(100, 150, 50, 50);
 
         // create a panel for organizing the components at the bottom
@@ -110,6 +100,7 @@ public class SimpleGUI extends JFrame {
         panel.add(resetButton);
         panel.add(checkBox1);
         panel.add(checkBox2);
+        panel.add(newWindow);
 
         // creating a third panel to place slider and bottom panels vertically
         // (allows two rows of UI elements to be displayed)
@@ -125,7 +116,88 @@ public class SimpleGUI extends JFrame {
         add(textArea, BorderLayout.CENTER);
         add(combinedPanels, BorderLayout.SOUTH);
 
+        // --- SETTING UP EVENT HANDLING ----
+        //setting up buttons to use ActionListener interface and actionPerformed method
+        sendButton.addActionListener(this);
+        resetButton.addActionListener(this);
+        newWindow.addActionListener(this);
+        menuItem1.addActionListener(this);
+        menuItem2.addActionListener(this);
+        menuItem3.addActionListener(this);
+        menuItem4.addActionListener(this);
+
+        //setting up checkboxes to use ItemListener interface and itemStateChanged method
+        checkBox1.addItemListener(this);
+        checkBox2.addItemListener(this);
+        slider.addChangeListener(this);
+
         // display the frame!
         setVisible(true);
+    }
+
+    // ActionListener interface method, called when a button is clicked
+    public void actionPerformed(ActionEvent ae) {
+        // cast ae to a JButton object since we want to call the getText method on it;
+        // casting is needed since getSource() returns Object type, NOT a JButton
+        Object source = ae.getSource();
+        if(source instanceof JButton) {
+            JButton button = (JButton) source;
+            String text = button.getText();
+
+            if (text.equals("Send")) {
+                welcomeLabel.setText("Send pressed!");
+                String t = textField.getText();
+                textArea.append(t);
+            } else if (text.equals("Reset")) {
+                welcomeLabel.setText("Reset pressed!");
+                textField.setText("");
+                textArea.setText("");
+                checkBox1.setSelected(false);
+                checkBox1.setSelected(false);
+
+            }else if(text.equals("Open")){
+                JFrame newFrame = new JFrame("Look at me!");
+                newFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+                newFrame.setSize(200,150);
+                newFrame.setLocation(350,75);
+                JLabel helloLabel = new JLabel("HELLO");
+                JPanel panel = new JPanel();
+                panel.add(helloLabel);
+                newFrame.add(panel, BorderLayout.NORTH);
+                newFrame.setVisible(true);
+            }
+        }else if(source instanceof JMenuItem){
+            JMenuItem item = (JMenuItem) source;
+            String menu = item.getText();
+            textField.setText(menu);
+        }
+    }
+
+    // ItemListener interface method, called when EITHER check box is toggled!
+    public void itemStateChanged(ItemEvent e) {
+
+        // cast e to a JCheckBox object since we want to call the getText method on it;
+        // casting is needed since getSource() returns Object type, NOT a JCheckBox
+        Object source = e.getSource();
+        JCheckBox cb = (JCheckBox) source;
+        String cbText = cb.getText();
+
+        int checkBoxOnOrOff = e.getStateChange(); // 1 for selected, 2 for deselected
+        if (checkBoxOnOrOff == 1) {
+            welcomeLabel.setText(cbText + " box SELECTED!");
+        } else if (checkBoxOnOrOff == 2) {
+            welcomeLabel.setText(cbText + " box DESELECTED!");
+        }
+
+        // we don't "print" with GUI based apps, but printing
+        // can still be helpful for testing and debugging!
+        System.out.println("Current state: yes = " + checkBox1.isSelected() + ", no = " + checkBox2.isSelected());
+
+    }
+    public void stateChanged(ChangeEvent e){
+        Object source = e.getSource();
+        JSlider slider = (JSlider)source;
+        int v = slider.getValue();
+        textArea.setText("" + value);
     }
 }
